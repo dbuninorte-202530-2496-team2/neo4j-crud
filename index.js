@@ -1,12 +1,13 @@
 import express from "express";
-import driver from "./db.js";
+import usuarioRouter from "./rutas/usuarios.js";
 
 const app = express();
 app.use(express.json());
 
+app.use('/users', usuarioRouter)
 
 app.get("/", (req, res) => {
-  res.send("Servidor Neo4j funcionando correctamente");
+	res.send("Servidor Neo4j funcionando correctamente");
 });
 
 
