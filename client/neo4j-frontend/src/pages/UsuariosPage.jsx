@@ -1,25 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const users =[
-    { id: 1, nombre: "Ana" },
-    { id: 2, nombre: "Luis" },
-    { id: 3, nombre: "Carlos" },
-]
-
-export default function UsuariosPage() {
+export default function UsuariosPage({ users }) {
   const navigate = useNavigate();
 
-  // Array de ejemplo (puedes recibirlo como prop o traerlo de un backend)
   const [usuarios, setUsuarios] = useState(users);
-
-  const [seleccionados, setSeleccionados] = useState([]);
+  const [seleccionado, setSeleccionado] = useState(null);
   const [nuevoUsuario, setNuevoUsuario] = useState("");
 
   const handleSeleccion = (id) => {
-    setSeleccionados((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setSeleccionado(prev => prev === id ? null : id);
   };
 
   const handleAgregarUsuario = () => {
@@ -29,46 +19,83 @@ export default function UsuariosPage() {
     setNuevoUsuario("");
   };
 
+  const handleIrAOtraPagina = () => {
+    const usuarioSeleccionado = usuarios.find(u => u.id === seleccionado);
+    navigate("/usuario", { state: { usuario: usuarioSeleccionado } });
+  };
+
+  const baseButtonClass = "rounded-lg border border-transparent bg-[#1a1a1a] text-[rgba(255,255,255,0.87)] px-5 py-2.5 text-base font-medium font-[inherit] cursor-pointer transition-[border-color] duration-[250ms] hover:border-[#646cff] focus:outline-[4px] focus:outline-[auto] focus:outline-[-webkit-focus-ring-color] focus-visible:outline-[4px] focus-visible:outline-[auto] focus-visible:outline-[-webkit-focus-ring-color]";
+
   return (
-    <div className="p-6 max-w-md mx-auto">
-      <h2 className="text-xl font-bold mb-4">Lista de Usuarios</h2>
-
-      <ul className="mb-4">
-        {usuarios.map((u) => (
-          <li key={u.id} className="flex items-center mb-2">
-            <input
-              type="checkbox"
-              checked={seleccionados.includes(u.id)}
-              onChange={() => handleSeleccion(u.id)}
-              className="mr-2"
-            />
-            <span>{u.nombre}</span>
-          </li>
-        ))}
-      </ul>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Agregar nuevo usuario:</label>
-        <input
-          type="text"
-          value={nuevoUsuario}
-          onChange={(e) => setNuevoUsuario(e.target.value)}
-          className="border rounded px-2 py-1 w-full mb-2"
-        />
-        <button
-          onClick={handleAgregarUsuario}
-          className="bg-green-600 text-white px-3 py-1 rounded"
+    <div 
+      className="min-h-screen bg-[#242424] text-[rgba(255,255,255,0.87)] flex flex-col items-center justify-center p-6"
+      style={{
+        fontFamily: 'system-ui, Avenir, Helvetica, Arial, sans-serif',
+        lineHeight: '1.5',
+        fontWeight: '400',
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
+      }}
+    >
+      <div className="w-full max-w-lg">
+        <h1 
+          className="font-normal mb-8"
+          style={{ fontSize: '3.2em', lineHeight: '1.1' }}
         >
-          Agregar
-        </button>
-      </div>
+          ¿Con qué usuario desea acceder?
+        </h1>
 
-      <button
-        onClick={() => navigate("/otra")}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        Ir a otra página
-      </button>
+        <div className="flex items-center justify-between mb-3">
+          <ul className="list-none p-0 mb-8">
+            {usuarios.map((u) => (
+              <li key={u.id} className="flex items-center mb-2">
+                <input
+                  type="radio"
+                  name="usuario"
+                  checked={seleccionado === u.id}
+                  onChange={() => handleSeleccion(u.id)}
+                  className="mr-2 cursor-pointer w-4 h-4"
+                />
+                <span className="text-base">{u.nombre}</span>
+              </li>
+            ))}
+          </ul>
+
+          <button 
+            onClick={handleIrAOtraPagina}
+            className={baseButtonClass}
+            disabled={!seleccionado}
+          >
+            Acceder
+          </button>
+
+        </div>
+
+        <div className="mb-8">
+          <label className="block mb-2 font-medium text-base">
+            Agregar nuevo usuario:
+          </label>
+          <input
+            type="text"
+            value={nuevoUsuario}
+            onChange={(e) => setNuevoUsuario(e.target.value)}
+            placeholder="Nombre del usuario"
+            className="rounded-lg border border-transparent bg-[#1a1a1a] text-[rgba(255,255,255,0.87)] px-5 py-2.5 text-base font-medium font-[inherit] w-full mb-3 transition-[border-color] duration-[250ms] focus:outline-none focus:border-[#646cff] placeholder:text-[rgba(255,255,255,0.4)]"
+          />
+          <button 
+            onClick={handleAgregarUsuario}
+            className={baseButtonClass}
+          >
+            Agregar
+          </button>
+        </div>
+        
+        {!seleccionado && (
+          <p className="text-sm text-white/50 mt-2">
+            Selecciona un usuario para continuar
+          </p>
+        )}
+      </div>
     </div>
   );
 }
