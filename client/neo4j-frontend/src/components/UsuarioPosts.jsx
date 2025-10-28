@@ -1,28 +1,27 @@
 import PostItem from "./PostItem";
 
-export default function UsuarioPosts({ usuario }) {
-  if (!usuario) return null;
-
-  const handlePostClick = (post, autor) => {
-    alert(`Post de ${autor}: ${post}`);
-  };
+export default function UsuarioPosts({ usuario, posts, onPostClick }) {
+  // Filtrar solo los posts del usuario actual
+  const postsDeUsuario = posts.filter(
+    (post) => post.autor.idu === usuario.idu
+  );
 
   return (
-    <div className="bg-[#2a2a2a] p-4 rounded-lg w-full">
-      <h3 className="text-xl font-semibold text-[#646cff] mb-3">
-        {usuario.nombre}
-      </h3>
-
-      <div className="space-y-3 overflow-y-auto max-h-[250px] pr-2 scrollbar-thin scrollbar-thumb-[#646cff]/50 scrollbar-track-[#1a1a1a]">
-        {usuario.posts.map((post, index) => (
+    <div className="bg-[#1a1a1a] rounded-lg p-4 max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#646cff]/40 scrollbar-track-[#1a1a1a]">
+      {postsDeUsuario.length > 0 ? (
+        postsDeUsuario.map((post) => (
           <PostItem
-            key={index}
+            key={post.idp}
             post={post}
-            autor={usuario.nombre}
-            onClick={handlePostClick}
+            usuario = {usuario}
+            onClick={() => onPostClick(usuario, post)}
           />
-        ))}
-      </div>
+        ))
+      ) : (
+        <p className="text-white/70 text-center">
+          Este usuario no tiene publicaciones aún.
+        </p>
+      )}
     </div>
   );
 }

@@ -14,13 +14,13 @@ export default function UsuariosPage({ users }) {
 
   const handleAgregarUsuario = () => {
     if (nuevoUsuario.trim() === "") return;
-    const nuevo = { id: Date.now(), nombre: nuevoUsuario };
+    const nuevo = { idu: users.length + 1, nombre: nuevoUsuario };
     setUsuarios((prev) => [...prev, nuevo]);
     setNuevoUsuario("");
   };
 
   const handleIrAOtraPagina = () => {
-    const usuarioSeleccionado = usuarios.find(u => u.id === seleccionado);
+    const usuarioSeleccionado = usuarios.find(u => u.idu === seleccionado);
     navigate("/usuario", { state: { usuario: usuarioSeleccionado } });
   };
 
@@ -48,12 +48,12 @@ export default function UsuariosPage({ users }) {
         <div className="flex items-center justify-between mb-3">
           <ul className="list-none p-0 mb-8">
             {usuarios.map((u) => (
-              <li key={u.id} className="flex items-center mb-2">
+              <li key={u.idu} className="flex items-center mb-2">
                 <input
                   type="radio"
                   name="usuario"
-                  checked={seleccionado === u.id}
-                  onChange={() => handleSeleccion(u.id)}
+                  checked={seleccionado === u.idu}
+                  onChange={() => handleSeleccion(u.idu)}
                   className="mr-2 cursor-pointer w-4 h-4"
                 />
                 <span className="text-base">{u.nombre}</span>

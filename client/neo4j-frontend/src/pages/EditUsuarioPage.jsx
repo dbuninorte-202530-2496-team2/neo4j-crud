@@ -18,9 +18,13 @@ export default function EditUsuarioPage() {
 
   const handleEditar = () => {
 
+    const usuarioActualizado = {
+      ...usuario,
+      nombre: nombre
+    };
     alert(`Usuario "${usuario.nombre}" cambiado a "${nombre}"`);
     // Luego volvemos a la lista
-    navigate("/usuario", { state: { usuario: usuario } });
+    navigate("/usuario", { state: { usuario: usuarioActualizado } });
   };
 
   const handleEliminar = () => {
@@ -30,7 +34,7 @@ export default function EditUsuarioPage() {
 
   return (
     <div className="min-h-screen bg-[#242424] text-white/87">
-      <Navbar />
+      <Navbar usuario={usuario} />
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-6">
         <h2 className="text-2xl font-bold mb-4">Editar Usuario</h2>
 
