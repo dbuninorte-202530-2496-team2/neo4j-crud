@@ -48,8 +48,8 @@ export const comentarioDB = {
 
 			return {
 				...comentario,
-				idp: comentario.idp,
-				consec: comentario.consec,
+				idp: comentario.idp.toNumber(),
+				consec: comentario.consec.toNumber(),
 				usuario: {
 					idu: record.get('idu'),
 					nombre: record.get('nombre')
@@ -72,8 +72,8 @@ export const comentarioDB = {
 				const c = record.get("c").properties;
 				return {
 					...c,
-					idp: c.idp,
-					consec: c.consec,
+					idp: c.idp.toNumber(),
+					consec: c.consec.toNumber(),
 					usuario: {
 						idu: record.get("idu"),
 						nombre: record.get("nombre"),
@@ -98,8 +98,8 @@ export const comentarioDB = {
 				const c = record.get("c").properties;
 				return {
 					...c,
-					idp: c.idp,
-					consec: c.consec,
+					idp: c.idp.toNumber(),
+					consec: c.consec.toNumber(),
 					usuario: {
 						idu: record.get("idu"),
 						nombre: record.get("nombre")
@@ -125,8 +125,8 @@ export const comentarioDB = {
 			const c = record.get('c').properties;
 			return {
 				...c,
-				idp: c.idp,
-				consec: c.consec,
+				idp: c.idp.toNumber(),
+				consec: c.consec.toNumber(),
 				usuario: {
 					idu: record.get("idu"),
 					nombre: record.get("nombre")
@@ -154,8 +154,8 @@ export const comentarioDB = {
 			const c = result.records[0].get('c').properties;
 			return {
 				...c,
-				idp: c.idp,
-				consec: c.consec,
+				idp: c.idp.toNumber(),
+				consec: c.consec.toNumber(),
 			};
 		} finally {
 			await session.close();
@@ -178,8 +178,8 @@ export const comentarioDB = {
 			const c = result.records[0].get("c").properties;
 			return {
 				...c,
-				idp: c.idp,
-				consec: c.consec
+				idp: c.idp.toNumber(),
+				consec: c.consec.toNumber()
 			};
 		} finally {
 			await session.close();

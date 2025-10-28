@@ -1,6 +1,6 @@
+import neo4j from 'neo4j-driver';
 import { getNeo4jDriver } from "../config/db.js";
 let driver;
-
 export const postDB = {
 	async init() {
 		driver = await getNeo4jDriver();
@@ -15,7 +15,6 @@ export const postDB = {
 			await session.close();
 		}
 	},
-
 	async create(contenido, idu) {
 		const session = driver.session();
 		try {
@@ -26,18 +25,19 @@ export const postDB = {
 				 WITH u, c.value as idp
 				 CREATE (p:Post {idp: idp, contenido: $contenido})
 				 CREATE (u)-[:publica]->(p)
-				 RETURN p, u`,
+				 RETURN p`,
 				{ contenido, idu }
 			);
-			if (result.records.length === 0) {
-				throw new Error('Usuario no encontrado');
-			}
-			return result.records[0].get('p').properties;
+			if (result.records.length === 0) return null;
+			const post = result.records[0].get('p').properties;
+			return {
+				...post,
+				idp: post.idp.toNumber()
+			};
 		} finally {
 			await session.close();
 		}
 	},
-
 	async getAll() {
 		const session = driver.session();
 		try {
@@ -46,15 +46,18 @@ export const postDB = {
 				 RETURN p, u.idu as idu, u.nombre as nombre
 				 ORDER BY p.idp DESC`
 			);
-			return result.records.map(record => ({
-				...record.get("p").properties
-			}));
+			return result.records.map(record => {
+				const post = record.get("p").properties;
+				return {
+					...post,
+					idp: post.idp.toNumber()
+				};
+			});
 		} finally {
 			await session.close();
 		}
 	},
-
-	async getFeed(limit = 20, offset = 0) {
+	async getFeed(limit, offset) {
 		const session = driver.session();
 		try {
 			const result = await session.run(
@@ -63,20 +66,26 @@ export const postDB = {
 				 ORDER BY p.idp DESC
 				 SKIP $offset
 				 LIMIT $limit`,
-				{ offset, limit }
-			);
-			return result.records.map(record => ({
-				...record.get("p").properties,
-				autor: {
-					idu: record.get("idu"),
-					nombre: record.get("nombre")
+				{
+					offset: neo4j.int(offset),
+					limit: neo4j.int(limit)
 				}
-			}));
+			);
+			return result.records.map(record => {
+				const post = record.get("p").properties;
+				return {
+					...post,
+					idp: post.idp.toNumber(),
+					autor: {
+						idu: record.get("idu"),
+						nombre: record.get("nombre")
+					}
+				};
+			});
 		} finally {
 			await session.close();
 		}
 	},
-
 	async getOneById(idp) {
 		const session = driver.session();
 		try {
@@ -87,8 +96,10 @@ export const postDB = {
 			);
 			if (result.records.length === 0) return null;
 			const record = result.records[0];
+			const post = record.get('p').properties;
 			return {
-				...record.get('p').properties,
+				...post,
+				idp: post.idp.toNumber(),
 				autor: {
 					idu: record.get("idu"),
 					nombre: record.get("nombre")
@@ -98,7 +109,6 @@ export const postDB = {
 			await session.close();
 		}
 	},
-
 	async updateOne(idp, contenido) {
 		const session = driver.session();
 		try {
@@ -109,12 +119,15 @@ export const postDB = {
 				{ idp, contenido }
 			);
 			if (result.records.length === 0) return null;
-			return result.records[0].get("p").properties;
+			const post = result.records[0].get("p").properties;
+			return {
+				...post,
+				idp: post.idp.toNumber()
+			};
 		} finally {
 			await session.close();
 		}
 	},
-
 	async delete(idp) {
 		const session = driver.session();
 		try {

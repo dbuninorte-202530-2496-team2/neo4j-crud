@@ -3,14 +3,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { closeNeo4jDriver, getNeo4jDriver } from "./config/db.js";
-import { usuarioRouter, postRouter } from "./routes/index.js";
-import { usuarioDB, postDB } from "./db/index.js";
+import { usuarioDB, postDB, comentarioDB } from "./db/index.js";
+import { comentarioRouter, postRouter, usuarioRouter } from "./routes/index.js";
 
 const app = express();
 app.use(express.json());
 
-app.use('/users', usuarioRouter);
-app.use('/posts', postRouter);
+app.use('/api/posts', postRouter);
+app.use('/api/usuarios', usuarioRouter);
+app.use('/api/comentarios', comentarioRouter);
 
 app.get("/", (req, res) => {
 	res.send("Servidor Neo4j funcionando correctamente");
@@ -47,6 +48,7 @@ const startServer = async () => {
 		console.log('Inicializando modelos...');
 		await usuarioDB.init();
 		await postDB.init();
+		await comentarioDB.init();
 
 		console.log('Base de datos lista.');
 

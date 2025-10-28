@@ -1,10 +1,9 @@
 import express from "express";
 import { comentarioDB } from "../db/comentario.db.js";
-import { CreateComentarioDto, UpdateComentarioDto, ComentarioIdDto, PositiveIntDto } from "../dto/index.js";
+import { CreateComentarioDto, PositiveIntDto, UpdateComentarioDto } from "../dto/index.js";
 
 const comentarioRouter = express.Router();
 
-// Obtener todos los comentarios
 comentarioRouter.get("/", async (req, res) => {
 	try {
 		const comentarios = await comentarioDB.getAll();
@@ -15,7 +14,6 @@ comentarioRouter.get("/", async (req, res) => {
 	}
 });
 
-// Obtener comentarios de un post
 comentarioRouter.get("/post/:idp", async (req, res) => {
 	try {
 		const { error, value: idp } = PositiveIntDto.validate(req.params.idp);
@@ -29,21 +27,17 @@ comentarioRouter.get("/post/:idp", async (req, res) => {
 	}
 });
 
-// Obtener un comentario específico
 comentarioRouter.get("/:idp/:consec", async (req, res) => {
 	try {
-		const { error, value } = ComentarioIdDto.validate({
-			idp: parseInt(req.params.idp),
-			consec: parseInt(req.params.consec)
-		});
-		if (error) return res.status(400).json({ error: error.message });
+		const { error: errorIdp, value: idp } = PositiveIntDto.validate(req.params.idp);
+		if (errorIdp) return res.status(400).json({ error: errorIdp.message });
 
-		const { idp, consec } = value;
+		const { error: errorConsec, value: consec } = PositiveIntDto.validate(req.params.consec);
+		if (errorConsec) return res.status(400).json({ error: errorConsec.message });
+
 		const comentario = await comentarioDB.getOneById(idp, consec);
+		if (!comentario) return res.status(404).json({ error: 'Comentario no encontrado' });
 
-		if (!comentario) {
-			return res.status(404).json({ error: 'Comentario no encontrado' });
-		}
 		res.json(comentario);
 	} catch (error) {
 		console.error(error);
@@ -51,16 +45,12 @@ comentarioRouter.get("/:idp/:consec", async (req, res) => {
 	}
 });
 
-// Crear comentario
 comentarioRouter.post("/", async (req, res) => {
 	try {
 		const { error, value } = CreateComentarioDto.validate(req.body);
 		if (error) return res.status(400).json({ error: error.message });
 
 		const comentario = await comentarioDB.create(value);
-		if (!comentario) {
-			return res.status(404).json({ error: 'Post o Usuario no encontrado' });
-		}
 		res.status(201).json(comentario);
 	} catch (error) {
 		console.error(error);
@@ -68,26 +58,24 @@ comentarioRouter.post("/", async (req, res) => {
 	}
 });
 
-// Autorizar comentario (solo dueño del post)
 comentarioRouter.patch("/:idp/:consec/authorize", async (req, res) => {
 	try {
-		const { error, value } = ComentarioIdDto.validate({
-			idp: parseInt(req.params.idp),
-			consec: parseInt(req.params.consec)
-		});
+		const { error: errorIdp, value: idp } = PositiveIntDto.validate(req.params.idp);
+		if (errorIdp) return res.status(400).json({ error: errorIdp.message });
+
+		const { error: errorConsec, value: consec } = PositiveIntDto.validate(req.params.consec);
+		if (errorConsec) return res.status(400).json({ error: errorConsec.message });
+
+		const { error, value } = AutorizarComentarioDto.validate(req.body);
 		if (error) return res.status(400).json({ error: error.message });
 
-		const { idp, consec } = value;
-		const { idu } = req.body; // En producción vendría del token/sesión
-
-		if (!idu) {
-			return res.status(400).json({ error: 'Se requiere idu del autorizador' });
-		}
-
-		const comentario = await comentarioDB.authorize(idp, consec, idu);
+		const comentario = await comentarioDB.authorize(idp, consec, value.iduAutorizador);
 		if (!comentario) {
-			return res.status(403).json({ error: 'No tienes permiso para autorizar este comentario o ya está autorizado' });
+			return res.status(404).json({
+				error: 'Comentario no encontrado o ya autorizado, o no eres el autor del post'
+			});
 		}
+
 		res.json(comentario);
 	} catch (error) {
 		console.error(error);
@@ -95,49 +83,45 @@ comentarioRouter.patch("/:idp/:consec/authorize", async (req, res) => {
 	}
 });
 
-// Actualizar comentario
 comentarioRouter.put("/:idp/:consec", async (req, res) => {
 	try {
-		const { error: e, value } = ComentarioIdDto.validate({
-			idp: parseInt(req.params.idp),
-			consec: parseInt(req.params.consec)
-		});
-		if (e) return res.status(400).json({ error: e.message });
+		const { error: errorIdp, value: idp } = PositiveIntDto.validate(req.params.idp);
+		if (errorIdp) return res.status(400).json({ error: errorIdp.message });
+
+		const { error: errorConsec, value: consec } = PositiveIntDto.validate(req.params.consec);
+		if (errorConsec) return res.status(400).json({ error: errorConsec.message });
 
 		const { error, value: body } = UpdateComentarioDto.validate(req.body);
 		if (error) return res.status(400).json({ error: error.message });
 
-		const { idp, consec } = value;
 		const { contenidoCom, likeNotLike } = body;
-
 		const comentario = await comentarioDB.updateOne(idp, consec, contenidoCom, likeNotLike);
 
-		if (!comentario) {
-			return res.status(404).json({ error: 'Comentario no encontrado' });
-		}
+		if (!comentario) return res.status(404).json({ error: 'Comentario no encontrado' });
+
 		res.json(comentario);
 	} catch (error) {
+		console.error(error);
 		res.status(500).json({ error: error.message });
 	}
 });
 
-// Eliminar comentario
 comentarioRouter.delete("/:idp/:consec", async (req, res) => {
 	try {
-		const { error, value } = ComentarioIdDto.validate({
-			idp: parseInt(req.params.idp),
-			consec: parseInt(req.params.consec)
-		});
-		if (error) return res.status(400).json({ error: error.message });
+		const { error: errorIdp, value: idp } = PositiveIntDto.validate(req.params.idp);
+		if (errorIdp) return res.status(400).json({ error: errorIdp.message });
 
-		const { idp, consec } = value;
+		const { error: errorConsec, value: consec } = PositiveIntDto.validate(req.params.consec);
+		if (errorConsec) return res.status(400).json({ error: errorConsec.message });
+
 		const deleted = await comentarioDB.delete(idp, consec);
-
 		if (!deleted) {
 			return res.status(404).json({ error: "Comentario no encontrado" });
 		}
+
 		res.status(204).send();
 	} catch (error) {
+		console.error(error);
 		res.status(500).json({ error: error.message });
 	}
 });

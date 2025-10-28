@@ -1,4 +1,3 @@
-export { CreatePostDto } from "./createPost.dto.js";
-export { UpdatePostDto } from "./updatePost.dto.js";
-export { CreateUsuarioDto } from "./createUsuario.dto.js";
-export { UpdateUsuarioDto } from "./updateUsuario.dto.js";
+export * from "./post.dto.js";
+export * from "./usuario.dto.js";
+export * from "./comentario.dto.js";
