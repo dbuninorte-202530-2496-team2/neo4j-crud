@@ -1,17 +1,11 @@
 # neo4j-crud
 
-* Instalar dependencias:
-```npm install```
+![Screenshot](./modelo.jpg)
 
-* Duplicar el archivo `.env.template`. Renombrar la copia como `.env`.
+Se implementa el modelo relacional del sistema de una red social simplificada en el gestor de bases de datos NEO4J. 
 
-* Editar `.env` con los datos correspondientes
+* Se utiliza Node+Express.JS en el servidor. Este expone endpoints para el CRUD de los nodos, utilizando el driver de neo4j conectado a una instancia.
 
+* Se implementa una aplicación web para el consumo de dichas funciones en una experiencia de usuario cotidiana.
 
-* Ejecutar en modo desarrollo (reinicio automático):
-```npm run watch```
-
-
-La aplicación escuchará en http://localhost:<PORT>.
-
-
+El despliegue de las aplicaciones se realiza por separado y secomunican por medio de variables de entorno. Ver los directorios para mayor información.
