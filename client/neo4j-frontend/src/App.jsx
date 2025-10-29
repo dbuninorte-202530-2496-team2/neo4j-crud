@@ -8,17 +8,17 @@ import TodosLosPostsPage from "./pages/TodosLosPostsPage";
 // USUARIOS
 const usuarios = [
   { idu: 1, nombre: "Ana" },
-  { idu: 2, nombre: "Luis" },
-  { idu: 3, nombre: "Carlos" },
+  { idu: 2, nombre: "Manager" },
+  { idu: 3, nombre: "Anonimo" },
 ];
 
 const posts = [
   {idp: 1, contenido: "Hoy aprendí cómo usar useState en React 😄", autor: { idu: 1, nombre: "Ana" }},
-  {idp: 2, contenido: "Estoy experimentando con MongoDB y me encanta 🚀", autor: { idu: 2, nombre: "Luis" }},
-  {idp: 3, contenido: "Alguien más usa Neo4j? Es genial para datos relacionados 😍", autor: { idu: 3, nombre: "Carlos" }},
+  {idp: 2, contenido: "Estoy experimentando con MongoDB y me encanta 🚀", autor: { idu: 2, nombre: "Manager" }},
+  {idp: 3, contenido: "Alguien más usa Neo4j? Es genial para datos relacionados 😍", autor: { idu: 3, nombre: "Anonimo" }},
   {idp: 4, contenido: "Hoy terminé mi primer CRUD completo con React y Node 💪", autor: { idu: 1, nombre: "Ana" }},
-  {idp: 5, contenido: "Hoy terminé mi primer CRUD completo con React y Node 💪", autor: { idu: 2, nombre: "Luis" }},
-  {idp: 6, contenido: "Hoy terminé mi primer CRUD completo con React y Node 💪", autor: { idu: 3, nombre: "Carlos" }},
+  {idp: 5, contenido: "Hoy terminé mi primer CRUD completo con React y Node 💪", autor: { idu: 2, nombre: "Manager" }},
+  {idp: 6, contenido: "Hoy terminé mi primer CRUD completo con React y Node 💪", autor: { idu: 3, nombre: "Anonimo" }},
 ];
 
 // COMENTARIOS
@@ -28,7 +28,7 @@ const comentarios = [
     contenidoCom: "Excelente post Ana!",
     fechorCom: "2025-10-27T10:30:00",
     likeNotLike: "like",
-    fechorAut: "2025-10-27T10:35:00",
+    fechorAut: "",
     idp: 1, // pertenece al post con idp=1
     idu: 2, // hecho por el usuario con idu=2 (Luis)
   },
@@ -60,9 +60,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/usuarios" element={<UsuariosPage users={usuarios} />} />
-        <Route path="/usuario" element={<UsuarioPage posts={posts} comentarios={comentarios} />} />
+        <Route path="/usuario" element={<UsuarioPage posts={posts} comentarios={comentarios} usuarios={usuarios}/>} />
         <Route path= "/editarUsuario" element={<EditUsuarioPage/>}/>
-        <Route path= "/todosLosPosts" element={<TodosLosPostsPage posts = {posts} comentarios = {comentarios}/>}/>
+        <Route path= "/todosLosPosts" element={<TodosLosPostsPage posts = {posts} comentarios = {comentarios} usuarios={usuarios}/>}/>
       </Routes>
     </BrowserRouter>
     </div>
