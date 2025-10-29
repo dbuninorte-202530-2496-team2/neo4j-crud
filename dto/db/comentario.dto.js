@@ -12,14 +12,12 @@ export const CreateComentarioDto = Joi.object({
 			'any.required': 'idp es requerido'
 		}),
 
-	idu: Joi.number()
-		.integer()
-		.positive()
+	idu: Joi.string()
+		.uuid()
 		.required()
 		.messages({
-			'number.base': 'idu debe ser un número',
-			'number.integer': 'idu debe ser un número entero',
-			'number.positive': 'idu debe ser positivo',
+			'string.base': 'idu debe ser texto',
+			'string.guid': 'idu debe ser un UUID válido',
 			'any.required': 'idu es requerido'
 		}),
 
@@ -57,14 +55,12 @@ export const UpdateComentarioDto = Joi.object({
 });
 
 export const AutorizarComentarioDto = Joi.object({
-	iduAutorizador: Joi.number()
-		.integer()
-		.positive()
+	iduAutorizador: Joi.string()
+		.uuid()
 		.required()
 		.messages({
-			'number.base': 'iduAutorizador debe ser un número',
-			'number.integer': 'iduAutorizador debe ser un número entero',
-			'number.positive': 'iduAutorizador debe ser positivo',
+			'string.base': 'iduAutorizador debe ser texto',
+			'string.guid': 'iduAutorizador debe ser un UUID válido',
 			'any.required': 'iduAutorizador es requerido'
-		})
+		}),
 });

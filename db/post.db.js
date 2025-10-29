@@ -8,7 +8,7 @@ export const postDB = {
 		const session = driver.session();
 		try {
 			await session.run(
-				`MERGE (c:Counter {name: 'postId'})
+				`MERGE (c:COUNTER {name: 'postId'})
 				 ON CREATE SET c.value = 0`
 			);
 		} finally {
@@ -19,11 +19,11 @@ export const postDB = {
 		const session = driver.session();
 		try {
 			const result = await session.run(
-				`MATCH (u:Usuario {idu: $idu})
-				 MATCH (c:Counter {name: 'postId'})
+				`MATCH (u:USUARIO {idu: $idu})
+				 MATCH (c:COUNTER {name: 'postId'})
 				 SET c.value = c.value + 1
 				 WITH u, c.value as idp
-				 CREATE (p:Post {idp: idp, contenido: $contenido})
+				 CREATE (p:POST {idp: idp, contenido: $contenido})
 				 CREATE (u)-[:publica]->(p)
 				 RETURN p`,
 				{ contenido, idu }
@@ -42,7 +42,7 @@ export const postDB = {
 		const session = driver.session();
 		try {
 			const result = await session.run(
-				`MATCH (u:Usuario)-[:publica]->(p:Post)
+				`MATCH (u:USUARIO)-[:publica]->(p:POST)
 				 RETURN p, u.idu as idu, u.nombre as nombre
 				 ORDER BY p.idp DESC`
 			);
@@ -61,7 +61,7 @@ export const postDB = {
 		const session = driver.session();
 		try {
 			const result = await session.run(
-				`MATCH (u:Usuario)-[:publica]->(p:Post)
+				`MATCH (u:USUARIO)-[:publica]->(p:POST)
 				 RETURN p, u.idu as idu, u.nombre as nombre
 				 ORDER BY p.idp DESC
 				 SKIP $offset
@@ -90,7 +90,7 @@ export const postDB = {
 		const session = driver.session();
 		try {
 			const result = await session.run(
-				`MATCH (u:Usuario)-[:publica]->(p:Post {idp: $idp})
+				`MATCH (u:USUARIO)-[:publica]->(p:POST {idp: $idp})
 				 RETURN p, u.idu as idu, u.nombre as nombre`,
 				{ idp }
 			);
@@ -113,7 +113,7 @@ export const postDB = {
 		const session = driver.session();
 		try {
 			const result = await session.run(
-				`MATCH (p:Post {idp: $idp})
+				`MATCH (p:POST {idp: $idp})
 				 SET p.contenido = $contenido
 				 RETURN p`,
 				{ idp, contenido }
@@ -132,7 +132,7 @@ export const postDB = {
 		const session = driver.session();
 		try {
 			const result = await session.run(
-				`MATCH (p:Post {idp: $idp})
+				`MATCH (p:POST {idp: $idp})
 				 DETACH DELETE p
 				 RETURN COUNT(p) AS count`,
 				{ idp }

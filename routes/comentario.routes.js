@@ -1,6 +1,6 @@
 import express from "express";
 import { comentarioDB } from "../db/comentario.db.js";
-import { CreateComentarioDto, PositiveIntDto, UpdateComentarioDto } from "../dto/index.js";
+import { AutorizarComentarioDto, CreateComentarioDto, PositiveIntDto, UpdateComentarioDto } from "../dto/index.js";
 
 const comentarioRouter = express.Router();
 
@@ -50,8 +50,22 @@ comentarioRouter.post("/", async (req, res) => {
 		const { error, value } = CreateComentarioDto.validate(req.body);
 		if (error) return res.status(400).json({ error: error.message });
 
-		const comentario = await comentarioDB.create(value);
-		res.status(201).json(comentario);
+		const result = await comentarioDB.create(value);
+
+		if (result.error) {
+			switch (result.error) {
+				case 1:
+					return res.status(404).json({ error: 'Post no encontrado' });
+				case 2:
+					return res.status(404).json({ error: 'Usuario no encontrado' });
+				case 3:
+					return res.status(400).json({ error: 'El post no tiene autor asignado' });
+				default:
+					return res.status(500).json({ error: 'Error desconocido' });
+			}
+		}
+
+		res.status(201).json(result);
 	} catch (error) {
 		console.error(error);
 		res.status(500).json({ error: error.message });
