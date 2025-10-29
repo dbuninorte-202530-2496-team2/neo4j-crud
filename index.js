@@ -10,7 +10,7 @@ import { comentarioRouter, postRouter, usuarioRouter } from "./routes/index.js";
 const app = express();
 
 app.use(cors({
-	origin: process.env.FRONTEND_URL,
+	origin: process.env.FRONTEND_URL.split(','),
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
 	allowedHeaders: ['Content-Type', 'Authorization']
 }));
