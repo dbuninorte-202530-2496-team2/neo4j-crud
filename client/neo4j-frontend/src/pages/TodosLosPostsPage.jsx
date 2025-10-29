@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useState } from "react";
-import Navbar from "../components/NavBar.jsx";
+import Navbar from "../components/NavBar";
 import PostItem from "../components/PostItem";
 import PostModal from "../components/PostModal";
 
