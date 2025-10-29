@@ -1,4 +1,5 @@
 import express from "express";
+import cors from 'cors';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -7,6 +8,12 @@ import { usuarioDB, postDB, comentarioDB } from "./db/index.js";
 import { comentarioRouter, postRouter, usuarioRouter } from "./routes/index.js";
 
 const app = express();
+
+app.use(cors({
+	origin: process.env.FRONTEND_URL,
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+	allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 app.use('/api/posts', postRouter);
