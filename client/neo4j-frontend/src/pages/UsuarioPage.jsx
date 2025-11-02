@@ -1,163 +1,170 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import Swal from "sweetalert2";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import UsuarioPosts from "../components/UsuarioPosts";
 import PostModal from "../components/PostModal";
 import AutorizarComentarios from "../components/AutorizarComentarios";
+import { postsAPI, comentariosAPI } from "../api/api";
 
-export default function UsuarioPage({ posts: allPosts, comentarios: allComentarios, usuarios }) {
+export default function UsuarioPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const usuario = location.state?.usuario;
   const [postSeleccionado, setPostSeleccionado] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [comentarios, setComentarios] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Estados locales para posts y comentarios
-  const [posts, setPosts] = useState(allPosts);
-  const [comentarios, setComentarios] = useState(allComentarios);
+  useEffect(() => {
+    if (!usuario) {
+      navigate("/usuarios");
+      return;
+    }
+    cargarDatos();
+  }, [usuario, navigate]);
 
-  // Si no hay usuario, redirige
-  if (!usuario) {
-    navigate("/usuarios");
-    return null;
-  }
+  const cargarDatos = async () => {
+    try {
+      setLoading(true);
+      const [postsData, comentariosData] = await Promise.all([
+        postsAPI.getAll(),
+        comentariosAPI.getAll()
+      ]);
+      setPosts(postsData);
+      setComentarios(comentariosData);
+    } catch (error) {
+      console.error('Error al cargar datos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Filtrar los posts del usuario actual
+  if (!usuario) return null;
+
   const userPosts = posts.filter((p) => p.autor.idu === usuario.idu);
 
   const handlePostClick = (usuario, post) => {
     setPostSeleccionado(post);
   };
 
-  //Agregar nuevo post
-  const handleAgregarPost = async () => {
-    const { value: nuevoContenido } = await Swal.fire({
-      title: "Nuevo post",
-      input: "textarea",
-      inputLabel: "Escribe tu post",
-      inputPlaceholder: "Aquí tu texto...",
-      inputAttributes: { "aria-label": "Escribe tu post aquí" },
-      showCancelButton: true,
-      confirmButtonText: "Guardar",
-      cancelButtonText: "Cancelar",
-      background: "#1a1a1a",
-      color: "#fff",
-    });
+ const handleAgregarPost = async () => {
+    const nuevoContenido = prompt("Escribe tu post:");
 
-    if (nuevoContenido) {
-      const nuevoPost = {
-        idp: posts.length + 1,
-        contenido: nuevoContenido,
-        autor: { idu: usuario.idu, nombre: usuario.nombre },
-      };
-
-      setPosts((prev) => [...prev, nuevoPost]);
-      Swal.fire("✅ Post agregado", "", "success");
+    if (nuevoContenido && nuevoContenido.trim()) {
+      try {
+        const nuevoPost = await postsAPI.create(nuevoContenido, usuario.idu);
+        setPosts((prev) => [nuevoPost, ...prev]); // Lo agrega al inicio
+        alert("✅ Post agregado correctamente");
+      } catch (error) {
+        alert("❌ Error al crear post: " + error.message);
+        console.error("Error al crear post:", error);
+      }
     }
   };
 
-  // 📌 Editar post
+
   const handleEditarPost = async (post) => {
-    const { value: nuevoContenido } = await Swal.fire({
-      title: "Editar post",
-      input: "textarea",
-      inputValue: post.contenido,
-      inputLabel: "Modifica tu post",
-      inputPlaceholder: "Escribe aquí...",
-      inputAttributes: { "aria-label": "Edita tu post" },
-      showCancelButton: true,
-      confirmButtonText: "Guardar",
-      cancelButtonText: "Cancelar",
-      background: "#1a1a1a",
-      color: "#fff",
-      confirmButtonColor: "#646cff",
-    });
+    const nuevoContenido = prompt("Editar post:", post.contenido);
 
     if (nuevoContenido && nuevoContenido.trim() !== "") {
-      const postEditado = {
-        ...post,
-        contenido: nuevoContenido,
-      };
-
-      setPosts((prev) =>
-        prev.map((p) => (p.idp === postEditado.idp ? postEditado : p))
-      );
-
-      Swal.fire({
-        title: "Post editado",
-        icon: "success",
-        background: "#1a1a1a",
-        color: "#fff",
-        confirmButtonColor: "#646cff",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      try {
+        const postEditado = await postsAPI.update(post.idp, nuevoContenido);
+        setPosts((prev) =>
+          prev.map((p) => (p.idp === postEditado.idp ? postEditado : p))
+        );
+      } catch (error) {
+        alert('Error al editar post: ' + error.message);
+        console.error('Error al editar post:', error);
+      }
     }
   };
 
-  //Eliminar post
   const handleEliminarPost = async (post) => {
-    const result = await Swal.fire({
-      title: "¿Eliminar post?",
-      text: "Esta acción eliminará el post y todos sus comentarios",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      background: "#1a1a1a",
-      color: "#fff",
-      confirmButtonColor: "#ef4444",
-      cancelButtonColor: "#6c757d",
-    });
-
-    if (result.isConfirmed) {
-      // Eliminar el post
-      setPosts((prev) => prev.filter((p) => p.idp !== post.idp));
-      
-      // Eliminar comentarios asociados al post
-      setComentarios((prev) => prev.filter((c) => c.idp !== post.idp));
-
-      Swal.fire({
-        title: "Post eliminado",
-        icon: "success",
-        background: "#1a1a1a",
-        color: "#fff",
-        confirmButtonColor: "#646cff",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+    if (confirm("¿Eliminar post? Esta acción eliminará el post y todos sus comentarios")) {
+      try {
+        await postsAPI.delete(post.idp);
+        setPosts((prev) => prev.filter((p) => p.idp !== post.idp));
+        setComentarios((prev) => prev.filter((c) => c.idp !== post.idp));
+      } catch (error) {
+        alert('Error al eliminar post: ' + error.message);
+        console.error('Error al eliminar post:', error);
+      }
     }
   };
 
-  //Agregar comentario
-  const handleAgregarComentario = (comentario) => {
-    setComentarios((prev) => [...prev, comentario]);
+  const handleAgregarComentario = async (comentario) => {
+    try {
+      const nuevoComentario = await comentariosAPI.create(
+        comentario.idp,
+        comentario.idu,
+        comentario.contenidoCom,
+        comentario.likeNotLike || true
+      );
+      setComentarios((prev) => [...prev, nuevoComentario]);
+    } catch (error) {
+      alert('Error al agregar comentario: ' + error.message);
+      console.error('Error al agregar comentario:', error);
+    }
+    
   };
 
-  //Editar comentario
-  const handleEditarComentario = (comentarioEditado) => {
-    setComentarios((prev) =>
-      prev.map((c) =>
-        c.consec === comentarioEditado.consec ? comentarioEditado : c
-      )
+  const handleEditarComentario = async (comentarioEditado) => {
+    try {
+      const comentarioActualizado = await comentariosAPI.update(
+        comentarioEditado.idp,
+        comentarioEditado.consec,
+        comentarioEditado.contenidoCom,
+        comentarioEditado.likeNotLike !== undefined ? comentarioEditado.likeNotLike : true
+      );
+      setComentarios((prev) =>
+        prev.map((c) =>
+          c.idp === comentarioActualizado.idp && c.consec === comentarioActualizado.consec
+            ? comentarioActualizado 
+            : c
+        )
+      );
+    } catch (error) {
+      alert('Error al editar comentario: ' + error.message);
+      console.error('Error al editar comentario:', error);
+    }
+  };
+
+  const handleAutorizarComentario = async (comentario) => {
+    try {
+      await comentariosAPI.authorize(comentario.idp, comentario.consec, usuario.idu);
+      setComentarios((prev) =>
+        prev.map((c) =>
+          c.idp === comentario.idp && c.consec === comentario.consec
+            ? { ...c, fechorAut: new Date().toISOString() }
+            : c
+        )
+      );
+    } catch (error) {
+      alert('Error al autorizar comentario: ' + error.message);
+      console.error('Error al autorizar comentario:', error);
+    }
+  };
+
+  const handleEliminarComentario = async (comentario) => {
+    try {
+      await comentariosAPI.delete(comentario.idp, comentario.consec);
+      
+      setComentarios((prev) =>
+        prev.filter((c) => !(c.idp === comentario.idp && c.consec === comentario.consec))
+      );
+    } catch (error) {
+      alert('Error al eliminar comentario: ' + error.message);
+      console.error('Error al eliminar comentario:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#242424] text-white/87 flex items-center justify-center">
+        <div className="text-xl">Cargando...</div>
+      </div>
     );
-  };
-
-  // Autorizar comentario
-  const handleAutorizarComentario = (comentario) => {
-    setComentarios((prev) =>
-      prev.map((c) =>
-        c.consec === comentario.consec
-          ? { ...c, fechorAut: new Date().toISOString() }
-          : c
-      )
-    );
-  };
-
-  // Eliminar comentario
-  const handleEliminarComentario = (consec) => {
-    setComentarios((prev) => prev.filter((c) => c.consec !== consec));
-  };
+  }
 
   return (
     <div className="min-h-screen bg-[#242424] text-white/87">
@@ -166,7 +173,6 @@ export default function UsuarioPage({ posts: allPosts, comentarios: allComentari
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-6">
         <h2 className="text-3xl font-bold mb-6">Posts de {usuario.nombre}</h2>
 
-        {/* Mostrar los posts del usuario */}
         {userPosts.length > 0 ? (
           <div className="w-full max-w-2xl">
             <UsuarioPosts 
@@ -181,7 +187,6 @@ export default function UsuarioPage({ posts: allPosts, comentarios: allComentari
           <p className="text-gray-400">Este usuario no tiene posts aún.</p>
         )}
 
-        {/* Sección para autorizar comentarios */}
         <AutorizarComentarios
           usuario={usuario}
           comentarios={comentarios}
@@ -189,7 +194,6 @@ export default function UsuarioPage({ posts: allPosts, comentarios: allComentari
           onAutorizar={handleAutorizarComentario}
         />
 
-        {/* Botón para agregar post */}
         <button
           onClick={handleAgregarPost}
           className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition"
@@ -197,7 +201,6 @@ export default function UsuarioPage({ posts: allPosts, comentarios: allComentari
           Agregar Post
         </button>
 
-        {/* Modal que se muestra al hacer click en un post*/}
         {postSeleccionado && (
           <PostModal
             post={postSeleccionado}
@@ -207,7 +210,6 @@ export default function UsuarioPage({ posts: allPosts, comentarios: allComentari
             onAgregarComentario={handleAgregarComentario}
             onEditarComentario={handleEditarComentario}
             onEliminarComentario={handleEliminarComentario}
-            usuarios={usuarios}
           />
         )}
       </div>

@@ -1,35 +1,56 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
+import { usuariosAPI } from "../api/api";
 
 export default function EditUsuarioPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const usuario = location.state?.usuario;
 
-  // Estado local editable
   const [nombre, setNombre] = useState(usuario?.nombre || "");
+  const [loading, setLoading] = useState(false);
 
   if (!usuario) {
-    // Si no hay usuario, volvemos a la lista
     navigate("/usuarios");
     return null;
   }
 
-  const handleEditar = () => {
+  const handleEditar = async () => {
+    if (!nombre.trim()) {
+      alert("El nombre no puede estar vacío");
+      return;
+    }
 
-    const usuarioActualizado = {
-      ...usuario,
-      nombre: nombre
-    };
-    alert(`Usuario "${usuario.nombre}" cambiado a "${nombre}"`);
-    // Luego volvemos a la lista
-    navigate("/usuario", { state: { usuario: usuarioActualizado } });
+    try {
+      setLoading(true);
+      const usuarioActualizado = await usuariosAPI.update(usuario.idu, nombre);
+      alert(`Usuario "${usuario.nombre}" cambiado a "${nombre}"`);
+      navigate("/usuario", { state: { usuario: usuarioActualizado } });
+    } catch (error) {
+      alert('Error al actualizar usuario: ' + error.message);
+      console.error('Error al actualizar usuario:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEliminar = () => {
-    alert(`Usuario "${usuario.nombre}" eliminado`);
-    navigate("/");
+  const handleEliminar = async () => {
+    if (!confirm(`¿Estás seguro de eliminar el usuario "${usuario.nombre}"?`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await usuariosAPI.delete(usuario.idu);
+      alert(`Usuario "${usuario.nombre}" eliminado`);
+      navigate("/");
+    } catch (error) {
+      alert('Error al eliminar usuario: ' + error.message);
+      console.error('Error al eliminar usuario:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,27 +65,31 @@ export default function EditUsuarioPage() {
             type="text"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            className="w-full px-3 py-2 rounded-md bg-[#242424] text-white/87 border border-[#646cff]/30 focus:border-[#646cff] focus:outline-none"
+            disabled={loading}
+            className="w-full px-3 py-2 rounded-md bg-[#242424] text-white/87 border border-[#646cff]/30 focus:border-[#646cff] focus:outline-none disabled:opacity-50"
           />
 
           <div className="flex justify-between mt-6">
             <button
               onClick={handleEditar}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition disabled:opacity-50"
             >
-              Guardar
+              {loading ? 'Guardando...' : 'Guardar'}
             </button>
             <button
               onClick={handleEliminar}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition"
+              disabled={loading}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition disabled:opacity-50"
             >
-              Eliminar
+              {loading ? 'Eliminando...' : 'Eliminar'}
             </button>
           </div>
 
           <button
             onClick={() => navigate("/")}
-            className="mt-6 w-full rounded-md border border-[#646cff]/50 px-4 py-2 hover:bg-[#646cff]/10 transition"
+            disabled={loading}
+            className="mt-6 w-full rounded-md border border-[#646cff]/50 px-4 py-2 hover:bg-[#646cff]/10 transition disabled:opacity-50"
           >
             Cerrar Sesión
           </button>

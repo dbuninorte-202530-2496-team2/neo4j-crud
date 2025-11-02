@@ -25,14 +25,20 @@ export const postDB = {
 				 WITH u, c.value as idp
 				 CREATE (p:POST {idp: idp, contenido: $contenido})
 				 CREATE (u)-[:publica]->(p)
-				 RETURN p`,
+				 RETURN p,  u.idu AS idu, u.nombre AS nombre`,
 				{ contenido, idu }
 			);
 			if (result.records.length === 0) return null;
-			const post = result.records[0].get('p').properties;
+
+			    const record = result.records[0];
+    			const post = record.get("p").properties;
 			return {
 				...post,
-				idp: post.idp.toNumber()
+				idp: post.idp.toNumber(),
+				autor:{
+					idu: record.get("idu"),
+        			nombre: record.get("nombre")
+				}
 			};
 		} finally {
 			await session.close();
@@ -48,9 +54,15 @@ export const postDB = {
 			);
 			return result.records.map(record => {
 				const post = record.get("p").properties;
+				const idu = record.get("idu");
+				const nombre = record.get("nombre");
 				return {
 					...post,
-					idp: post.idp.toNumber()
+					idp: post.idp.toNumber(),
+					autor:{
+						idu,
+						nombre
+					}
 				};
 			});
 		} finally {
@@ -99,7 +111,7 @@ export const postDB = {
 			const post = record.get('p').properties;
 			return {
 				...post,
-				idp: post.idp.toNumber(),
+				idp: typeof post.idp === "object" && post.idp.toNumber ? post.idp.toNumber() : Number(post.idp),
 				autor: {
 					idu: record.get("idu"),
 					nombre: record.get("nombre")

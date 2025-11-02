@@ -11,8 +11,7 @@ export default function PostModal({
   usuarioActual, 
   onAgregarComentario,
   onEditarComentario,
-  onEliminarComentario,
-  usuarios 
+  onEliminarComentario
 }) {
   if (!post) return null;
 
@@ -65,7 +64,7 @@ export default function PostModal({
     });
 
     if (result.isConfirmed) {
-      onEliminarComentario(comentario.consec);
+      onEliminarComentario(comentario);
       
       Swal.fire({
         title: "Comentario eliminado",
@@ -112,7 +111,6 @@ export default function PostModal({
             </h3>
             <ComentariosList 
               comentarios={comentariosDelPost}
-              usuarios={usuarios}
               usuarioActual={usuarioActual}
               onEditar={handleEditarComentario}
               onEliminar={handleEliminarComentario}
@@ -120,8 +118,14 @@ export default function PostModal({
           </div>
 
           {/* Formulario para agregar comentario */}
-          <ComentarioForm 
-            onAgregar={handleAgregarComentario}
+          <ComentarioForm
+            onAgregar={(comentario) =>
+              onAgregarComentario({
+                ...comentario,
+                idp: post.idp,
+                idu: usuarioActual.idu, 
+              })
+            }
             usuarioActual={usuarioActual}
           />
 

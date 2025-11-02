@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 dotenv.config();
 
+console.log("🧩 FRONTEND_URL:", process.env.FRONTEND_URL);
+
 import { closeNeo4jDriver, getNeo4jDriver } from "./config/db.js";
 import { usuarioDB, postDB, comentarioDB } from "./db/index.js";
 import { comentarioRouter, postRouter, usuarioRouter } from "./routes/index.js";

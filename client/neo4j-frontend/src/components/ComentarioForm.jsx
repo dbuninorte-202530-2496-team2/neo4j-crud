@@ -2,16 +2,20 @@ import { useState } from "react";
 
 export default function ComentarioForm({ onAgregar, usuarioActual }) {
   const [nuevoComentario, setNuevoComentario] = useState("");
-  const [likeNotLike, setLikeNotLike] = useState("like");
+  const [likeNotLike, setLikeNotLike] = useState(true);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
     if (nuevoComentario.trim() === "") return;
 
-    onAgregar(nuevoComentario, likeNotLike);
+    onAgregar({
+      contenidoCom: nuevoComentario,
+      likeNotLike,
+    });
+
     setNuevoComentario("");
-    setLikeNotLike("like"); // Reset a like por defecto
+    setLikeNotLike(true);
   };
 
   return (
@@ -34,9 +38,8 @@ export default function ComentarioForm({ onAgregar, usuarioActual }) {
           <input
             type="radio"
             name="likeNotLike"
-            value="like"
-            checked={likeNotLike === "like"}
-            onChange={(e) => setLikeNotLike(e.target.value)}
+            checked={likeNotLike === true}
+            onChange={() => setLikeNotLike(true)}
             className="w-4 h-4 cursor-pointer accent-green-500"
           />
           <span className="text-sm text-white/70">👍 Like</span>
@@ -46,9 +49,8 @@ export default function ComentarioForm({ onAgregar, usuarioActual }) {
           <input
             type="radio"
             name="likeNotLike"
-            value="not like"
-            checked={likeNotLike === "not like"}
-            onChange={(e) => setLikeNotLike(e.target.value)}
+            checked={likeNotLike === false}
+            onChange={() => setLikeNotLike(false)}
             className="w-4 h-4 cursor-pointer accent-red-500"
           />
           <span className="text-sm text-white/70">👎 Not Like</span>
