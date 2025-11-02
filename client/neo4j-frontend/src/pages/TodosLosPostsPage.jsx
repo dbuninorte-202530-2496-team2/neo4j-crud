@@ -53,7 +53,7 @@ export default function TodosLosPostsPage() {
         comentario.idp,
         comentario.idu,
         comentario.contenidoCom,
-        comentario.likeNotLike
+        comentario.likeNotLike || true
       );
       setComentarios((prev) => [...prev, nuevoComentario]);
     } catch (error) {
@@ -68,16 +68,33 @@ export default function TodosLosPostsPage() {
         comentarioEditado.idp,
         comentarioEditado.consec,
         comentarioEditado.contenidoCom,
-        comentarioEditado.likeNotLike
+        comentarioEditado.likeNotLike !== undefined ? comentarioEditado.likeNotLike : true
       );
       setComentarios((prev) =>
         prev.map((c) =>
-          c.consec === comentarioActualizado.consec ? comentarioActualizado : c
+          c.idp === comentarioActualizado.idp && c.consec === comentarioActualizado.consec
+            ? comentarioActualizado 
+            : c
         )
       );
     } catch (error) {
       alert('Error al editar comentario: ' + error.message);
       console.error('Error al editar comentario:', error);
+    }
+  };
+
+  const handleEliminarComentario = async (comentario) => {
+    
+    try {
+      await comentariosAPI.delete(comentario.idp, comentario.consec);
+      
+      // Actualiza los comentarios en el estado
+      setComentarios((prev) =>
+        prev.filter((c) => !(c.idp === comentario.idp && c.consec === comentario.consec))
+      );
+    } catch (error) {
+      alert('Error al eliminar comentario: ' + error.message);
+      console.error('Error al eliminar comentario:', error);
     }
   };
 
@@ -161,6 +178,7 @@ export default function TodosLosPostsPage() {
           onClose={() => setPostSeleccionado(null)}
           onAgregarComentario={handleAgregarComentario}
           onEditarComentario={handleEditarComentario}
+          onEliminarComentario={handleEliminarComentario}
         />
       )}
     </div>

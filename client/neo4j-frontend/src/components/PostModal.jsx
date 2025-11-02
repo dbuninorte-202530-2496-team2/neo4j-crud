@@ -16,22 +16,8 @@ export default function PostModal({
   if (!post) return null;
 
   const comentariosDelPost = comentarios.filter(
-    (c) => c.idp === post.idp && c.fechorAut != "" && c.fechorAut != null
+    (c) => c.idp === post.idp && c.fechorAut !== "" && c.fechorAut !== null
   );
-
-  const handleAgregarComentario = (contenido, likeNotLike) => {
-    const comentario = {
-      consec: Date.now(),
-      contenidoCom: contenido,
-      fechorCom: new Date().toISOString(),
-      likeNotLike: likeNotLike,
-      fechorAut: new Date().toISOString(),
-      idp: post.idp,
-      idu: usuarioActual.idu,
-    };
-
-    onAgregarComentario(comentario);
-  };
 
   const handleEditarComentario = async (comentario) => {
     const formValues = await mostrarModalEditarComentario(comentario);
