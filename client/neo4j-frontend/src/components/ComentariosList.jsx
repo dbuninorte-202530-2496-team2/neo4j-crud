@@ -26,7 +26,7 @@ export default function ComentariosList({ comentarios = [],  usuarioActual, onEd
                   {com.likeNotLike === true ? (
                     <span className="text-green-500"> 👍 Like</span>
                   ) : (
-                    <span className="text-red-500"> 👎 Not Like</span>
+                    <span className="text-red-500"> 👎 No Like</span>
                   )}
                   {" "}·{" "}
                   {new Date(com.fechorCom).toLocaleString()}

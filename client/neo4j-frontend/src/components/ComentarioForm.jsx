@@ -53,7 +53,7 @@ export default function ComentarioForm({ onAgregar, usuarioActual }) {
             onChange={() => setLikeNotLike(false)}
             className="w-4 h-4 cursor-pointer accent-red-500"
           />
-          <span className="text-sm text-white/70">👎 Not Like</span>
+          <span className="text-sm text-white/70">👎 No Like</span>
         </label>
       </div>
 

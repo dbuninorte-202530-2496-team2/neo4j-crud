@@ -49,7 +49,7 @@ export default function TodosLosPostsPage() {
         comentario.idp,
         comentario.idu,
         comentario.contenidoCom,
-        comentario.likeNotLike || true
+        comentario.likeNotLike 
       );
       setComentarios((prev) => [...prev, nuevoComentario]);
     } catch (error) {
