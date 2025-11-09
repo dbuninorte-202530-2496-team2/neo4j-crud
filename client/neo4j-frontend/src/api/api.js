@@ -61,9 +61,22 @@ export const postsAPI = {
     }));
   },
 
-  getFeed: async (limit = 10, offset = 0) => {
-    const response = await fetch(`${API_URL}/posts/feed?limit=${limit}&offset=${offset}`);
-    return handleResponse(response);
+  getByUsername: async(nombre) => {
+    const response = await fetch(`${API_URL}/posts/usuario/${nombre}`)
+    const posts = await handleResponse(response);
+    return posts.map(post => ({
+      ...post,
+      autor: post.autor || { idu: post.idu, nombre: post.nombre }
+    }));
+  },
+
+  getByIdu: async(idu) => {
+    const response = await fetch(`${API_URL}/posts/usuario/id/${idu}`)
+    const posts = await handleResponse(response);
+    return posts.map(post => ({
+      ...post,
+      autor: post.autor || { idu: post.idu, nombre: post.nombre }
+    }));
   },
 
   getById: async (idp) => {

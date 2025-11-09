@@ -27,7 +27,7 @@ export default function UsuarioPage() {
     try {
       setLoading(true);
       const [postsData, comentariosData] = await Promise.all([
-        postsAPI.getAll(),
+        postsAPI.getByIdu(usuario.idu),
         comentariosAPI.getAll()
       ]);
       setPosts(postsData);
@@ -40,8 +40,6 @@ export default function UsuarioPage() {
   };
 
   if (!usuario) return null;
-
-  const userPosts = posts.filter((p) => p.autor.idu === usuario.idu);
 
   const handlePostClick = (usuario, post) => {
     setPostSeleccionado(post);
@@ -173,11 +171,11 @@ export default function UsuarioPage() {
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-6">
         <h2 className="text-3xl font-bold mb-6">Posts de {usuario.nombre}</h2>
 
-        {userPosts.length > 0 ? (
+        {posts.length > 0 ? (
           <div className="w-full max-w-2xl">
             <UsuarioPosts 
               usuario={usuario} 
-              posts={userPosts} 
+              posts={posts} 
               onPostClick={handlePostClick}
               onEditarPost={handleEditarPost}
               onEliminarPost={handleEliminarPost}

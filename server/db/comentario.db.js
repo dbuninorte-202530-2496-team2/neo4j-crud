@@ -108,7 +108,6 @@ export const comentarioDB = {
 		try {
 			const result = await session.run(
 				`MATCH (p:POST {idp: $idp})-[:tiene]->(c:COMENTARIO)<-[:hace]-(u:USUARIO)
-				 WHERE NOT u.nombre IN ['ANONIMO', 'MANAGER']
 				 RETURN c, u.idu as idu, u.nombre as nombre
 				 ORDER BY c.consec ASC`,
 				{ idp }

@@ -17,15 +17,23 @@ export default function TodosLosPostsPage() {
 
   useEffect(() => {
     cargarDatos();
-  }, []);
+  }, [filtro]);
 
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      const [postsData, comentariosData] = await Promise.all([
-        postsAPI.getAll(),
-        comentariosAPI.getAll()
-      ]);
+      let postsData;
+      
+      if (filtro === "anonimo") {
+        postsData = await postsAPI.getByUsername("ANONIMO");
+      } else if (filtro === "manager") {
+        postsData = await postsAPI.getByUsername("MANAGER");
+      } else {
+        postsData = await postsAPI.getAll();
+      }
+
+      const comentariosData = await comentariosAPI.getAll();
+      
       setPosts(postsData);
       setComentarios(comentariosData);
     } catch (error) {
@@ -34,18 +42,6 @@ export default function TodosLosPostsPage() {
       setLoading(false);
     }
   };
-
-  const postsFiltrados = posts.filter((post) => {
-    const nombreAutor = post.autor?.nombre?.toUpperCase?.();
-
-    if (filtro === "anonimo") {
-      return nombreAutor === "ANONIMO";
-    } else if (filtro === "manager") {
-      return nombreAutor === "MANAGER";
-    } else {
-      return nombreAutor !== "ANONIMO" && nombreAutor !== "MANAGER";
-    }
-  });
 
   const handleAgregarComentario = async (comentario) => {
     try {
@@ -84,11 +80,8 @@ export default function TodosLosPostsPage() {
   };
 
   const handleEliminarComentario = async (comentario) => {
-    
     try {
       await comentariosAPI.delete(comentario.idp, comentario.consec);
-      
-      // Actualiza los comentarios en el estado
       setComentarios((prev) =>
         prev.filter((c) => !(c.idp === comentario.idp && c.consec === comentario.consec))
       );
@@ -122,7 +115,7 @@ export default function TodosLosPostsPage() {
                 : "bg-[#1a1a1a] text-white/70 hover:bg-[#2a2a2a] border border-[#646cff]/30"
             }`}
           >
-            👥 Usuarios ({posts.filter(p => p.autor?.nombre?.toUpperCase?.() !== "ANONIMO" && p.autor?.nombre?.toUpperCase?.() !== "MANAGER").length})
+            👥 Usuarios ({filtro === "todos" ? posts.length : "..."})
           </button>
 
           <button
@@ -133,7 +126,7 @@ export default function TodosLosPostsPage() {
                 : "bg-[#1a1a1a] text-white/70 hover:bg-[#2a2a2a] border border-[#646cff]/30"
             }`}
           >
-            🕵️ Anónimo ({posts.filter(p => p.autor?.nombre?.toUpperCase?.() === "ANONIMO").length})
+            🕵️ Anónimo ({filtro === "anonimo" ? posts.length : "..."})
           </button>
 
           <button
@@ -144,13 +137,13 @@ export default function TodosLosPostsPage() {
                 : "bg-[#1a1a1a] text-white/70 hover:bg-[#2a2a2a] border border-[#646cff]/30"
             }`}
           >
-            💼 Manager ({posts.filter(p => p.autor?.nombre?.toUpperCase?.() === "MANAGER").length})
+            💼 Manager ({filtro === "manager" ? posts.length : "..."})
           </button>
         </div>
 
         <div className="w-full max-w-3xl space-y-4 overflow-y-auto max-h-[70vh] p-4 border border-[#646cff]/30 rounded-lg bg-[#1a1a1a] scrollbar-thin scrollbar-thumb-[#646cff]/40 scrollbar-track-[#1a1a1a]">
-          {postsFiltrados.length > 0 ? (
-            postsFiltrados.map((post) => (
+          {posts.length > 0 ? (
+            posts.map((post) => (
               <PostItem
                 key={post.idp}
                 post={post}
@@ -166,7 +159,7 @@ export default function TodosLosPostsPage() {
         </div>
 
         <p className="mt-4 text-sm text-white/50">
-          Mostrando {postsFiltrados.length} de {posts.length} posts
+          Mostrando {posts.length} posts
         </p>
       </div>
 

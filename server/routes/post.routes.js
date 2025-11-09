@@ -21,7 +21,7 @@ postRouter.get("/feed", async (req, res) => {
 
 postRouter.get("/", async (req, res) => {
 	try {
-		const posts = await postDB.getAll();
+		const posts = await postDB.getAllFiltered();
 		res.json(posts);
 	} catch (error) {
 		console.error(error);
@@ -42,6 +42,28 @@ postRouter.get("/:idp", async (req, res) => {
 	} catch (error) {
 		console.error(error);
 		res.status(500).json({ error: 'Error al obtener post' });
+	}
+});
+
+postRouter.get("/usuario/:username", async (req, res) => {
+	try {
+		const username = req.params.username.trim();
+
+		const posts = await postDB.getManyByNombre(username);
+		res.json(posts);
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ error: error.message });
+	}
+});
+
+postRouter.get("/usuario/id/:idu", async (req, res) => {
+	try {
+		const posts = await postDB.getManyByIdu(req.params.idu);
+		res.json(posts);
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ error: error.message });
 	}
 });
 

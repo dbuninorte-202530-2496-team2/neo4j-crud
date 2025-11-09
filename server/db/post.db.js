@@ -28,27 +28,30 @@ export const postDB = {
 				 RETURN p,  u.idu AS idu, u.nombre AS nombre`,
 				{ contenido, idu }
 			);
-			if (result.records.length === 0) return null;
+			if (result.records.length === 0) {
+				throw new Error('Usuario no encontrado o COUNTER no inicializado');
+			}
 
-			    const record = result.records[0];
-    			const post = record.get("p").properties;
+			const record = result.records[0];
+			const post = record.get("p").properties;
 			return {
 				...post,
 				idp: post.idp.toNumber(),
-				autor:{
+				autor: {
 					idu: record.get("idu"),
-        			nombre: record.get("nombre")
+					nombre: record.get("nombre")
 				}
 			};
 		} finally {
 			await session.close();
 		}
 	},
-	async getAll() {
+	async getAllFiltered() {
 		const session = driver.session();
 		try {
 			const result = await session.run(
 				`MATCH (u:USUARIO)-[:publica]->(p:POST)
+				 WHERE NOT u.nombre IN ['ANONIMO', 'MANAGER']
 				 RETURN p, u.idu as idu, u.nombre as nombre
 				 ORDER BY p.idp DESC`
 			);
@@ -59,7 +62,60 @@ export const postDB = {
 				return {
 					...post,
 					idp: post.idp.toNumber(),
-					autor:{
+					autor: {
+						idu,
+						nombre
+					}
+				};
+			});
+		} finally {
+			await session.close();
+		}
+	},
+	async getManyByNombre(name) {
+		const session = driver.session();
+		try {
+			const result = await session.run(
+				`MATCH (u:USUARIO)-[:publica]->(p:POST)
+				 WHERE u.nombre = $name
+				 RETURN p, u.idu as idu, u.nombre as nombre
+				 ORDER BY p.idp DESC`,
+				{ name }
+			);
+			return result.records.map(record => {
+				const post = record.get("p").properties;
+				const idu = record.get("idu");
+				const nombre = record.get("nombre");
+				return {
+					...post,
+					idp: post.idp.toNumber(),
+					autor: {
+						idu,
+						nombre
+					}
+				};
+			});
+		} finally {
+			await session.close();
+		}
+	},
+	async getManyByIdu(idUser) {
+		const session = driver.session();
+		try {
+			const result = await session.run(
+				`MATCH (u:USUARIO {idu: $idUser})-[:publica]->(p:POST)
+				 RETURN p, u.idu as idu, u.nombre as nombre
+				 ORDER BY p.idp DESC`,
+				{ idUser }
+			);
+			return result.records.map(record => {
+				const post = record.get("p").properties;
+				const idu = record.get("idu");
+				const nombre = record.get("nombre");
+				return {
+					...post,
+					idp: post.idp.toNumber(),
+					autor: {
 						idu,
 						nombre
 					}
@@ -145,8 +201,9 @@ export const postDB = {
 		try {
 			const result = await session.run(
 				`MATCH (p:POST {idp: $idp})
-				 DETACH DELETE p
-				 RETURN COUNT(p) AS count`,
+             OPTIONAL MATCH (p)-[:tiene]->(c:COMENTARIO)
+             DETACH DELETE p, c
+             RETURN COUNT(p) AS count`,
 				{ idp }
 			);
 			const count = result.records[0].get("count").toNumber();
