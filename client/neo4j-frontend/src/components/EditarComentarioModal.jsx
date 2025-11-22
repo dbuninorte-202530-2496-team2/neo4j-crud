@@ -24,8 +24,8 @@ export async function mostrarModalEditarComentario(comentario) {
             <input 
               type="radio" 
               name="likeNotLike" 
-              value="like" 
-              ${comentario.likeNotLike === "like" ? "checked" : ""}
+              value = "true"
+              ${comentario.likeNotLike === true ? "checked" : ""}
               style="width: 16px; height: 16px; accent-color: #10b981; cursor: pointer;"
             />
             <span style="color: white; font-size: 14px;">👍 Like</span>
@@ -33,9 +33,9 @@ export async function mostrarModalEditarComentario(comentario) {
           <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
             <input 
               type="radio" 
-              name="likeNotLike" 
-              value="not like"
-              ${comentario.likeNotLike === "not like" ? "checked" : ""}
+              name="likeNotLike"
+              value="false"
+              ${comentario.likeNotLike === false ? "checked" : ""}
               style="width: 16px; height: 16px; accent-color: #ef4444; cursor: pointer;"
             />
             <span style="color: white; font-size: 14px;">👎 Not Like</span>
@@ -81,7 +81,7 @@ export async function mostrarModalEditarComentario(comentario) {
       
       return { 
         contenido: contenido.trim(), 
-        likeNotLike: likeNotLikeElement.value 
+        likeNotLike: likeNotLikeElement.value === "true"
       };
     }
   });

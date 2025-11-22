@@ -24,7 +24,7 @@ export default function AutorizarComentarios({ usuario, comentarios, posts, onAu
 
       <ul className="space-y-4">
         {comentariosPendientes.map((c) => (
-          <li key={c.consec} className="bg-[#242424] p-3 rounded-md shadow">
+          <li key={`${c.idp}-${c.consec}`} className="bg-[#242424] p-3 rounded-md shadow">
             <p className="text-white/90 mb-2">{c.contenidoCom}</p>
             <p className="text-sm text-gray-400">
               En el post:{" "}

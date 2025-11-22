@@ -108,7 +108,6 @@ export const comentarioDB = {
 		try {
 			const result = await session.run(
 				`MATCH (p:POST {idp: $idp})-[:tiene]->(c:COMENTARIO)<-[:hace]-(u:USUARIO)
-				 WHERE NOT u.nombre IN ['ANONIMO', 'MANAGER']
 				 RETURN c, u.idu as idu, u.nombre as nombre
 				 ORDER BY c.consec ASC`,
 				{ idp }
@@ -188,29 +187,37 @@ export const comentarioDB = {
 	},
 
 	async updateOne(idp, consec, contenidoCom, likeNotLike) {
-		const session = driver.session();
-		try {
-			const result = await session.run(
-				`MATCH (c:COMENTARIO {idp: $idp, consec: $consec})
-				 SET c.contenidoCom = $contenidoCom,
-				     c.likeNotLike = $likeNotLike,
-				     c.fechorCom = localdatetime()
-				 RETURN c`,
-				{ idp, consec, contenidoCom, likeNotLike }
-			);
-			if (result.records.length === 0) return null;
+	const session = driver.session();
 
-			const c = result.records[0].get("c").properties;
-			return {
-				...c,
-				fechorCom: c.fechorCom.toStandardDate(),
-				fechorAut: c.fechorAut?.toStandardDate() ?? null,
-				idp: c.idp.toNumber(),
-				consec: c.consec.toNumber()
-			};
-		} finally {
-			await session.close();
+	try {
+		const result = await session.run(
+		`MATCH (u:USUARIO)-[:hace]->(c:COMENTARIO {idp: $idp, consec: $consec})<-[:tiene]-(p:POST)
+		SET c.contenidoCom = $contenidoCom,
+			c.likeNotLike = $likeNotLike,
+			c.fechorCom = localdatetime()
+		RETURN c, u.idu as idu, u.nombre as nombre, p.idp as idp`,
+		{ idp, consec, contenidoCom, likeNotLike }
+		);
+		
+		if (result.records.length === 0) return null;
+
+		const record = result.records[0];
+		const c = record.get("c").properties;
+
+		return {
+		...c,
+		idp: c.idp.toNumber(),
+		consec: c.consec.toNumber(),
+		fechorCom: c.fechorCom.toStandardDate(),
+		fechorAut: c.fechorAut?.toStandardDate() ?? null,
+		usuario: {
+			idu: record.get("idu"),
+			nombre: record.get("nombre")
 		}
+		};
+	} finally {
+		await session.close();
+	}
 	},
 
 	async delete(idp, consec) {

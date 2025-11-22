@@ -1,123 +1,179 @@
 import { useLocation } from "react-router-dom";
-import { useState } from "react";
-import Navbar from "../components/NavBar";
+import { useState, useEffect } from "react";
+import Navbar from "../components/Navbar";
 import PostItem from "../components/PostItem";
 import PostModal from "../components/PostModal";
+import { postsAPI, comentariosAPI } from "../api/api";
 
-export default function TodosLosPostsPage({ posts: allPosts, comentarios: allComentarios, usuarios }) {
-	const location = useLocation();
-	const usuario = location.state?.usuario;
-	const [postSeleccionado, setPostSeleccionado] = useState(null);
+export default function TodosLosPostsPage() {
+  const location = useLocation();
+  const usuario = location.state?.usuario;
+  const [postSeleccionado, setPostSeleccionado] = useState(null);
 
-	// Estados locales para posts y comentarios
-	const [posts, setPosts] = useState(allPosts);
-	const [comentarios, setComentarios] = useState(allComentarios);
-	const [filtro, setFiltro] = useState("todos"); // "todos", "anonimo", "manager"
+  const [posts, setPosts] = useState([]);
+  const [comentarios, setComentarios] = useState([]);
+  const [filtro, setFiltro] = useState("todos");
+  const [loading, setLoading] = useState(true);
 
-	// Filtrar posts según la opción seleccionada
-	const postsFiltrados = posts.filter((post) => {
-		const nombreAutor = post.autor.nombre.toUpperCase();
+  useEffect(() => {
+    cargarDatos();
+  }, [filtro]);
 
-		if (filtro === "anonimo") {
-			return nombreAutor === "ANONIMO";
-		} else if (filtro === "manager") {
-			return nombreAutor === "MANAGER";
-		} else {
-			// "todos" - excluir ANONIMO y MANAGER
-			return nombreAutor !== "ANONIMO" && nombreAutor !== "MANAGER";
-		}
-	});
+  const cargarDatos = async () => {
+    try {
+      setLoading(true);
+      let postsData;
+      
+      if (filtro === "anonimo") {
+        postsData = await postsAPI.getByUsername("ANONIMO");
+      } else if (filtro === "manager") {
+        postsData = await postsAPI.getByUsername("MANAGER");
+      } else {
+        postsData = await postsAPI.getAll();
+      }
 
-	// 📌 Agregar comentario
-	const handleAgregarComentario = (comentario) => {
-		setComentarios((prev) => [...prev, comentario]);
-	};
+      const comentariosData = await comentariosAPI.getAll();
+      
+      setPosts(postsData);
+      setComentarios(comentariosData);
+    } catch (error) {
+      console.error('Error al cargar datos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-	// 📌 Editar comentario
-	const handleEditarComentario = (comentarioEditado) => {
-		setComentarios((prev) =>
-			prev.map((c) =>
-				c.consec === comentarioEditado.consec ? comentarioEditado : c
-			)
-		);
-	};
+  const handleAgregarComentario = async (comentario) => {
+    try {
+      const nuevoComentario = await comentariosAPI.create(
+        comentario.idp,
+        comentario.idu,
+        comentario.contenidoCom,
+        comentario.likeNotLike 
+      );
+      setComentarios((prev) => [...prev, nuevoComentario]);
+    } catch (error) {
+      alert('Error al agregar comentario: ' + error.message);
+      console.error('Error al agregar comentario:', error);
+    }
+  };
 
-	return (
-		<div className="min-h-screen bg-[#242424] text-white/87">
-			<Navbar usuario={usuario} />
+  const handleEditarComentario = async (comentarioEditado) => {
+    try {
+      const comentarioActualizado = await comentariosAPI.update(
+        comentarioEditado.idp,
+        comentarioEditado.consec,
+        comentarioEditado.contenidoCom,
+        comentarioEditado.likeNotLike !== undefined ? comentarioEditado.likeNotLike : true
+      );
+      setComentarios((prev) =>
+        prev.map((c) =>
+          c.idp === comentarioActualizado.idp && c.consec === comentarioActualizado.consec
+            ? comentarioActualizado 
+            : c
+        )
+      );
+    } catch (error) {
+      alert('Error al editar comentario: ' + error.message);
+      console.error('Error al editar comentario:', error);
+    }
+  };
 
-			<div className="p-6 flex flex-col items-center">
-				<h2 className="text-3xl font-bold mb-6">Publicaciones de todos los usuarios</h2>
+  const handleEliminarComentario = async (comentario) => {
+    try {
+      await comentariosAPI.delete(comentario.idp, comentario.consec);
+      setComentarios((prev) =>
+        prev.filter((c) => !(c.idp === comentario.idp && c.consec === comentario.consec))
+      );
+    } catch (error) {
+      alert('Error al eliminar comentario: ' + error.message);
+      console.error('Error al eliminar comentario:', error);
+    }
+  };
 
-				{/* Filtros */}
-				<div className="w-full max-w-3xl mb-4 flex gap-3 justify-center flex-wrap">
-					<button
-						onClick={() => setFiltro("todos")}
-						className={`px-4 py-2 rounded-lg font-medium transition-all ${filtro === "todos"
-							? "bg-[#646cff] text-white"
-							: "bg-[#1a1a1a] text-white/70 hover:bg-[#2a2a2a] border border-[#646cff]/30"
-							}`}
-					>
-						👥 Usuarios ({posts.filter(p => p.autor.nombre.toUpperCase() !== "ANONIMO" && p.autor.nombre.toUpperCase() !== "MANAGER").length})
-					</button>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#242424] text-white/87 flex items-center justify-center">
+        <div className="text-xl">Cargando posts...</div>
+      </div>
+    );
+  }
 
-					<button
-						onClick={() => setFiltro("anonimo")}
-						className={`px-4 py-2 rounded-lg font-medium transition-all ${filtro === "anonimo"
-							? "bg-[#646cff] text-white"
-							: "bg-[#1a1a1a] text-white/70 hover:bg-[#2a2a2a] border border-[#646cff]/30"
-							}`}
-					>
-						🕵️ Anónimo ({posts.filter(p => p.autor.nombre.toUpperCase() === "ANONIMO").length})
-					</button>
+  return (
+    <div className="min-h-screen bg-[#242424] text-white/87">
+      <Navbar usuario={usuario} />
 
-					<button
-						onClick={() => setFiltro("manager")}
-						className={`px-4 py-2 rounded-lg font-medium transition-all ${filtro === "manager"
-							? "bg-[#646cff] text-white"
-							: "bg-[#1a1a1a] text-white/70 hover:bg-[#2a2a2a] border border-[#646cff]/30"
-							}`}
-					>
-						👔 Manager ({posts.filter(p => p.autor.nombre.toUpperCase() === "MANAGER").length})
-					</button>
-				</div>
+      <div className="p-6 flex flex-col items-center">
+        <h2 className="text-3xl font-bold mb-6">Publicaciones de todos los usuarios</h2>
 
-				{/* Lista de posts filtrados */}
-				<div className="w-full max-w-3xl space-y-4 overflow-y-auto max-h-[70vh] p-4 border border-[#646cff]/30 rounded-lg bg-[#1a1a1a] scrollbar-thin scrollbar-thumb-[#646cff]/40 scrollbar-track-[#1a1a1a]">
-					{postsFiltrados.length > 0 ? (
-						postsFiltrados.map((post) => (
-							<PostItem
-								key={post.idp}
-								post={post}
-								usuario={post.autor}
-								onClick={() => setPostSeleccionado(post)}
-							/>
-						))
-					) : (
-						<p className="text-center text-gray-400 py-8">
-							No hay posts en esta categoría
-						</p>
-					)}
-				</div>
+        <div className="w-full max-w-3xl mb-4 flex gap-3 justify-center flex-wrap">
+          <button
+            onClick={() => setFiltro("todos")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              filtro === "todos"
+                ? "bg-[#646cff] text-white"
+                : "bg-[#1a1a1a] text-white/70 hover:bg-[#2a2a2a] border border-[#646cff]/30"
+            }`}
+          >
+            👥 Usuarios ({filtro === "todos" ? posts.length : "..."})
+          </button>
 
-				{/* Indicador de posts mostrados */}
-				<p className="mt-4 text-sm text-white/50">
-					Mostrando {postsFiltrados.length} de {posts.length} posts
-				</p>
-			</div>
+          <button
+            onClick={() => setFiltro("anonimo")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              filtro === "anonimo"
+                ? "bg-[#646cff] text-white"
+                : "bg-[#1a1a1a] text-white/70 hover:bg-[#2a2a2a] border border-[#646cff]/30"
+            }`}
+          >
+            🕵️ Anónimo ({filtro === "anonimo" ? posts.length : "..."})
+          </button>
 
-			{/* Modal que se muestra al hacer click */}
-			{postSeleccionado && (
-				<PostModal
-					post={postSeleccionado}
-					comentarios={comentarios}
-					usuarioActual={usuario}
-					onClose={() => setPostSeleccionado(null)}
-					onAgregarComentario={handleAgregarComentario}
-					onEditarComentario={handleEditarComentario}
-					usuarios={usuarios}
-				/>
-			)}
-		</div>
-	);
+          <button
+            onClick={() => setFiltro("manager")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              filtro === "manager"
+                ? "bg-[#646cff] text-white"
+                : "bg-[#1a1a1a] text-white/70 hover:bg-[#2a2a2a] border border-[#646cff]/30"
+            }`}
+          >
+            💼 Manager ({filtro === "manager" ? posts.length : "..."})
+          </button>
+        </div>
+
+        <div className="w-full max-w-3xl space-y-4 overflow-y-auto max-h-[70vh] p-4 border border-[#646cff]/30 rounded-lg bg-[#1a1a1a] scrollbar-thin scrollbar-thumb-[#646cff]/40 scrollbar-track-[#1a1a1a]">
+          {posts.length > 0 ? (
+            posts.map((post) => (
+              <PostItem
+                key={post.idp}
+                post={post}
+                usuario={post.autor}
+                onClick={() => setPostSeleccionado(post)}
+              />
+            ))
+          ) : (
+            <p className="text-center text-gray-400 py-8">
+              No hay posts en esta categoría
+            </p>
+          )}
+        </div>
+
+        <p className="mt-4 text-sm text-white/50">
+          Mostrando {posts.length} posts
+        </p>
+      </div>
+
+      {postSeleccionado && (
+        <PostModal
+          post={postSeleccionado}
+          comentarios={comentarios}
+          usuarioActual={usuario}
+          onClose={() => setPostSeleccionado(null)}
+          onAgregarComentario={handleAgregarComentario}
+          onEditarComentario={handleEditarComentario}
+          onEliminarComentario={handleEliminarComentario}
+        />
+      )}
+    </div>
+  );
 }

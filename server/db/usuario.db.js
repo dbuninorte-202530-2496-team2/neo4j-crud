@@ -57,7 +57,12 @@ export const usuarioDB = {
 		const session = driver.session();
 		try {
 			const result = await session.run(
-				"MATCH (u:USUARIO {idu: $idu}) DETACH DELETE u RETURN COUNT(u) AS count",
+				`MATCH (u:USUARIO {idu: $idu})
+             OPTIONAL MATCH (u)-[:publica]->(p:POST)
+             OPTIONAL MATCH (p)-[:tiene]->(c1:COMENTARIO)
+             OPTIONAL MATCH (u)-[:comenta]->(c2:COMENTARIO)
+             DETACH DELETE u, p, c1, c2
+             RETURN COUNT(u) AS count`,
 				{ idu }
 			);
 			const count = result.records[0].get("count").toNumber();
